@@ -1,0 +1,8 @@
+{
+  "name": "pumpkin-carver",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pumpkin Carver – cinematic 3D Halloween pumpkin carving game (Three.js), runs from file://",
+  "scripts": { "build": "node tools/build.mjs" },
+  "devDependencies": { "esbuild": "^0.28.2", "three": "^0.186.1" }
+}
