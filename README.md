@@ -2,7 +2,7 @@
 
 A cozy-spooky 3D Halloween browser game. A big ribbed pumpkin sits on a tree stump in a moonlit pumpkin patch. Draw around the shapes with your mouse or finger, right on the curved surface: the knife follows, the piece pops out with a wet crunch, seeds fly. Then strike the match — the candle lights up, the face glows and the pumpkin spins for its showcase.
 
-**Play:** https://frank-otto.github.io/pumpkin-carver/
+**Play:** [online version (GitHub Pages)](https://frank-otto.github.io/pumpkin-carver/)
 
 ## How to play
 - **Draw a closed loop** around a dashed shape on the pumpkin and let go — the piece is cut out and pops away.

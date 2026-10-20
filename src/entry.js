@@ -9,7 +9,7 @@ import { createFX, sparks, puff, updateFX } from './fx.js';
 import * as A from './audio.js';
 import { T } from './i18n.js';
 
-const URL_TXT = 'frank-otto.github.io/pumpkin-carver';
+const URL_TXT = '@Frank_AI_Lab';
 const $ = id => document.getElementById(id);
 const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 let seed = (window.__pcSeed || (Date.now() & 0xffffff)) >>> 0;
@@ -287,7 +287,7 @@ async function saveCard(share) {
   k.font = Fo(400, 32); txt(t('cardCta') + ' · ' + URL_TXT, CW / 2, 1290, 'rgba(255,255,255,.92)');
   const blob = await new Promise(r => c.toBlob(r, 'image/png')); window.__pcCard = { w: c.width, h: c.height };
   const file = new File([blob], 'pumpkin-carver.png', { type: 'image/png' });
-  if (share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text: `Pumpkin Carver — ${t('cardLine')} https://${URL_TXT}/` }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  if (share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text: `Pumpkin Carver — ${t('cardLine')} ${URL_TXT}` }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'pumpkin-carver.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
 }
 
