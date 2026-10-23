@@ -21,8 +21,10 @@ const DIFF = {
   hard: { time: 42, n: 3, snap: 0, stars: [.52, .7, .84], mult: 1.5, guide: .9 },
   kids: { time: 0, n: 2, snap: .25, stars: [0, .3, .55], mult: 1, guide: 1.8 }
 };
+// language follows the phone/browser (German devices → DE, else EN) until the player picks one with the DE/EN toggle
+function autoLang() { try { const l = (navigator.languages && navigator.languages[0]) || navigator.language || ''; return /^de\b/i.test(l) ? 'de' : 'en'; } catch (e) { return 'en'; } }
 const S = {
-  state: 'menu', mode: 'challenge', lang: ls.get('pc-lang', 'en'), diff: ls.get('pc-diff', 'medium'), kids: ls.get('pc-kids', '0') === '1', q: ls.get('pc-q', ''), qUser: !!ls.get('pc-q', ''),
+  state: 'menu', mode: 'challenge', lang: (ls.get('pc-lang', '') || autoLang()), diff: ls.get('pc-diff', 'medium'), kids: ls.get('pc-kids', '0') === '1', q: ls.get('pc-q', ''), qUser: !!ls.get('pc-q', ''),
   score: 0, gt: 0, el: 0, idx: 0, time: 0, timerOn: false, acc: 0, accs: [], starsAll: [], cuts: 0, newBest: false, best: 0, rv: 0, shake: 0, endT: -1,
   name: ls.get('pc-name', 'Player') || 'Player', lastScore: 0, lastStars: 0
 };
@@ -42,7 +44,7 @@ const F = createFX(scene, W.soft, W.smokeTex);
 const P = createPumpkin(scene, W.flameTex); const PY = W.STUMP + PR * SQ - .05; P.group.position.set(0, PY, 0); P.glowDecal.position.set(0, W.STUMP + .02, 0); scene.add(P.glowDecal);
 let composer, bloom;
 function buildComposer() {
-  if (composer) composer.dispose();
+  if (composer) { composer.passes.forEach(p => p.dispose && p.dispose()); composer.dispose(); } // passes (bloom/bokeh render targets) are not freed by composer.dispose()
   composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
   bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .32 * QUALITY[S.q].bloom, .4, .92); composer.addPass(bloom); // small + high threshold: the face glows, no glare veil
   composer.addPass(new OutputPass());
@@ -161,13 +163,13 @@ function cutPoly(pts, quiet) {
   return true;
 }
 function undo() {
-  if (S.state !== 'carve' || !P.polys.length) return; P.polys.pop(); redrawMask(P); const o = chunkList.pop(); if (o) { puff(F, o.m.position, 2, '#8a6a4a', .4); scene.remove(o.m); chunks.splice(chunks.indexOf(o), 1); }
+  if (S.state !== 'carve' || !P.polys.length) return; P.polys.pop(); redrawMask(P); const o = chunkList.pop(); if (o) { puff(F, o.m.position, 2, '#8a6a4a', .4); scene.remove(o.m); o.m.geometry.dispose(); chunks.splice(chunks.indexOf(o), 1); }
   updateAcc(); if (S.mode === "challenge") drawGuides(P, pieces.filter(p => !p.cut), D().guide); hud(); A.sfx.undo();
 }
 
 // ---------------- flow ----------------
 function freshPumpkin() {
-  resetCarve(P); for (const o of chunks) scene.remove(o.m); chunks.length = 0; chunkList.length = 0; for (const d of debris) { d.m.visible = false; d.life = 0; }
+  resetCarve(P); for (const o of chunks) { scene.remove(o.m); o.m.geometry.dispose(); } /* each chunk owns its geometry; materials are shared */ chunks.length = 0; chunkList.length = 0; for (const d of debris) { d.m.visible = false; d.life = 0; }
   setGlow(0); P.group.rotation.set(0, 0, 0); P.swap = 0;
 }
 let glowK = 0; function setGlow(k) { glowK = k; }
@@ -343,7 +345,7 @@ let last = performance.now();
 function loop(now) { const dt = (now - last) / 1000; last = now; if (!window.__pcManual) { step(dt); render(); fpsTick(dt); } requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
 const uvScreen = (u, v) => { const p = surf(u, v, 1); P.group.localToWorld(p); const q = p.clone().project(camera); return { x: (q.x * .5 + .5) * VW, y: (-q.y * .5 + .5) * VH, z: q.z }; };
-window.__pc = { S, start, end, light, undo, step: (dt, n = 1) => { for (let i = 0; i < n; i++) step(dt); render(); }, log: A.log, quality: q => q ? applyQuality(q, true) : S.q, renderer,
+window.__pc = { S, audioState: () => A.audioState(), start, end, light, undo, step: (dt, n = 1) => { for (let i = 0; i < n; i++) step(dt); render(); }, log: A.log, quality: q => q ? applyQuality(q, true) : S.q, renderer,
   pieces: () => pieces.map(p => ({ uv: p.uv, cut: p.cut })), cut: (poly, quiet) => cutPoly(poly, quiet), acc: () => updateAcc(), polys: () => P.polys.length, chunks: () => chunks.length,
   uvScreen, diffs: DIFF, diff: () => S.diff, knife: () => ({ visible: knife.visible }), glow: () => glowK,
   cam: () => ({ d: camera.position.distanceTo(new THREE.Vector3(0, PY, 0)), near: camera.near, y: camera.position.y }) };
